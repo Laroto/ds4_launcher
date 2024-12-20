@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ds4_launcher</name>
+  <version>0.0.1</version>
+  <description>Launches ps4 controller nodes for teleop control</description>
+  <maintainer email="pedrosr711@gmail.com">Pedro Rocha</maintainer>
+  <author email="pedrosr711@gmail.com">Pedro Rocha</author>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>joy</exec_depend>
+  <exec_depend>teleop_twist_joy</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

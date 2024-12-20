@@ -1,0 +1,40 @@
+---
+teleop_twist_joy_node:
+  ros__parameters:
+    # R1 (Right Bumper)
+    enable_button: 5
+
+    # L1 (Left Bumper)
+    enable_turbo_button: 4
+
+    # Linear motion
+    # Left thumbstick up/down (Y-axis)
+    axis_linear.x: 1
+
+    # Left thumbstick left/right (X-axis)
+    axis_linear.y: 0
+
+    # Normal speed for linear motion in X (forward/backward)
+    scale_linear.x: 0.08
+
+    # Normal speed for linear motion in Y (strafe)
+    scale_linear.y: 0.08
+
+    # Turbo speed for linear motion in X
+    scale_linear_turbo.x: 0.2
+
+    # Turbo speed for linear motion in Y
+    scale_linear_turbo.y: 0.16
+
+    # Angular motion
+    # Right thumbstick left/right (X-axis)
+    axis_angular.yaw: 3
+
+    # Normal angular speed for rotation
+    scale_angular.yaw: 0.2
+
+    # Turbo angular speed for rotation
+    scale_angular_turbo.yaw: 0.35
+
+    # Enable publishing TwistStamped messages
+    publish_stamped_twist: true  # Use TwistStamped instead of Twist
