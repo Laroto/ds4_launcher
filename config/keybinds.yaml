@@ -19,12 +19,12 @@ teleop_twist_joy_node:
       y: 0  # Left thumbstick left/right
       z: 7  # D-pad up/down
     scale_linear:
-      x: 0.12
-      y: 0.06
+      x: 0.14
+      y: 0.08
       z: 0.015
     scale_linear_turbo:
-      x: 0.20
-      y: 0.10
+      x: 0.28
+      y: 0.16
       z: 0.020
 
     axis_angular:
@@ -32,11 +32,11 @@ teleop_twist_joy_node:
       roll: 3   # Right thumbstick up/down
       pitch: 6  # D-pad left/right
     scale_angular:
-      yaw: 0.25
+      yaw: 0.375
       roll: 0.12
       pitch: 0.12
     scale_angular_turbo:
-      yaw: 0.45
+      yaw: 0.75
       roll: 0.18
       pitch: 0.18
 
