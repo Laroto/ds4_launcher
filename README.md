@@ -18,6 +18,7 @@ This package only contains the launch files with the custom parameter files.
 - Right Left/Right thumbstick -> yaw
 - Right Up/Down thumbstick -> roll in body-pose mode
 - D-pad Left/Right -> pitch in body-pose mode
-- D-pad Up/Down -> Z in body-pose mode
+- D-pad Up/Down -> Z in body-pose mode, walking-speed scale in walking mode
 - Circle -> publish `body_pose_mode=true` once
 - Square -> publish `body_pose_mode=false` once
+- D-pad Up/Down in walking mode -> increase/decrease speed scale in 10% steps

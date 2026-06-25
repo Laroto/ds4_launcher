@@ -17,28 +17,28 @@ teleop_twist_joy_node:
     axis_linear:
       x: 1  # Left thumbstick up/down
       y: 0  # Left thumbstick left/right
-      z: 7  # D-pad up/down
+      z: 7  # D-pad up/down in body-pose mode
     scale_linear:
-      x: 0.14
-      y: 0.08
-      z: 0.015
+      x: 0.25
+      y: 0.18
+      z: 0.03
     scale_linear_turbo:
-      x: 0.28
-      y: 0.16
-      z: 0.020
+      x: 0.50
+      y: 0.32
+      z: 0.060
 
     axis_angular:
       yaw: 2    # Right thumbstick left/right
       roll: 3   # Right thumbstick up/down
       pitch: 6  # D-pad left/right
     scale_angular:
-      yaw: 0.375
-      roll: 0.12
-      pitch: 0.12
+      yaw: 0.5
+      roll: 0.25
+      pitch: 0.25
     scale_angular_turbo:
-      yaw: 0.75
-      roll: 0.18
-      pitch: 0.18
+      yaw: 1.25
+      roll: 0.5
+      pitch: 0.5
 
     # Enable publishing TwistStamped messages
     publish_stamped_twist: true
