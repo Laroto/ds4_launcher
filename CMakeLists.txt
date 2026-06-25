@@ -6,6 +6,13 @@ find_package(ament_cmake REQUIRED)
 find_package(joy REQUIRED)
 find_package(teleop_twist_joy REQUIRED)
 
+# Install helper scripts
+install(
+  PROGRAMS
+    scripts/ds4_body_pose_mode.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 # Install configuration files
 install(
   DIRECTORY config

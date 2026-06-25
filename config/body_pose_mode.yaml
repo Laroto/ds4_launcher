@@ -1,0 +1,9 @@
+---
+ds4_body_pose_mode:
+  ros__parameters:
+    joy_topic: joy
+    mode_topic: body_pose_mode
+    # Circle
+    body_pose_button: 1
+    # Square
+    walking_button: 3

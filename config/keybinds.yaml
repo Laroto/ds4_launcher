@@ -7,34 +7,38 @@ teleop_twist_joy_node:
     # L1 (Left Bumper)
     enable_turbo_button: 4
 
-    # Linear motion
-    # Left thumbstick up/down (Y-axis)
-    axis_linear.x: 1
+    # Walking mode:
+    # - linear.x/y and angular.yaw are used as velocity commands.
+    #
+    # Body-pose mode:
+    # - linear.x/y/z become body XYZ offsets.
+    # - angular.roll/pitch/yaw become body roll, pitch, and yaw.
+    # The body-pose controller clamps these to its configured safe limits.
+    axis_linear:
+      x: 1  # Left thumbstick up/down
+      y: 0  # Left thumbstick left/right
+      z: 7  # D-pad up/down
+    scale_linear:
+      x: 0.12
+      y: 0.06
+      z: 0.015
+    scale_linear_turbo:
+      x: 0.20
+      y: 0.10
+      z: 0.020
 
-    # Left thumbstick left/right (X-axis)
-    axis_linear.y: 0
-
-    # Normal speed for linear motion in X (forward/backward)
-    scale_linear.x: 0.08
-
-    # Normal speed for linear motion in Y (strafe)
-    scale_linear.y: 0.08
-
-    # Turbo speed for linear motion in X
-    scale_linear_turbo.x: 0.2
-
-    # Turbo speed for linear motion in Y
-    scale_linear_turbo.y: 0.16
-
-    # Angular motion
-    # Right thumbstick left/right (X-axis)
-    axis_angular.yaw: 2
-
-    # Normal angular speed for rotation
-    scale_angular.yaw: 0.2
-
-    # Turbo angular speed for rotation
-    scale_angular_turbo.yaw: 0.35
+    axis_angular:
+      yaw: 2    # Right thumbstick left/right
+      roll: 3   # Right thumbstick up/down
+      pitch: 6  # D-pad left/right
+    scale_angular:
+      yaw: 0.25
+      roll: 0.12
+      pitch: 0.12
+    scale_angular_turbo:
+      yaw: 0.45
+      roll: 0.18
+      pitch: 0.18
 
     # Enable publishing TwistStamped messages
-    publish_stamped_twist: true  # Use TwistStamped instead of Twist
+    publish_stamped_twist: true

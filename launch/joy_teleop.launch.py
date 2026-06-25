@@ -30,4 +30,3 @@ def generate_launch_description():
             parameters=[config_file],
         )
     ])
-    
