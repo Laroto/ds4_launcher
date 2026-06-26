@@ -9,6 +9,9 @@ ds4_body_pose_mode:
     body_pose_button: 1
     # Square
     walking_button: 3
+    # Triangle
+    rest_pose_button: 2
+    rest_pose_service: go_to_rest_pose
     # D-pad up/down. Used for walking-speed steps only while body-pose mode is off.
     speed_axis: 7
     speed_axis_threshold: 0.5

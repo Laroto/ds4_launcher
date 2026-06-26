@@ -21,4 +21,5 @@ This package only contains the launch files with the custom parameter files.
 - D-pad Up/Down -> Z in body-pose mode, walking-speed scale in walking mode
 - Circle -> publish `body_pose_mode=true` once
 - Square -> publish `body_pose_mode=false` once
+- Triangle -> publish `body_pose_mode=false` once and call `go_to_rest_pose`
 - D-pad Up/Down in walking mode -> increase/decrease speed scale in 10% steps

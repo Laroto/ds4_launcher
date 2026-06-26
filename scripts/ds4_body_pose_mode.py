@@ -5,6 +5,7 @@ from geometry_msgs.msg import TwistStamped
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Bool
+from std_srvs.srv import Trigger
 
 
 class Ds4BodyPoseMode(Node):
@@ -17,6 +18,8 @@ class Ds4BodyPoseMode(Node):
         self.declare_parameter("output_cmd_topic", "cmd_vel")
         self.declare_parameter("body_pose_button", 1)
         self.declare_parameter("walking_button", 3)
+        self.declare_parameter("rest_pose_button", 2)
+        self.declare_parameter("rest_pose_service", "go_to_rest_pose")
         self.declare_parameter("speed_axis", 7)
         self.declare_parameter("speed_axis_threshold", 0.5)
         self.declare_parameter("speed_step_ratio", 0.1)
@@ -33,6 +36,10 @@ class Ds4BodyPoseMode(Node):
             self.get_parameter("body_pose_button").get_parameter_value().integer_value)
         self.walking_button = (
             self.get_parameter("walking_button").get_parameter_value().integer_value)
+        self.rest_pose_button = (
+            self.get_parameter("rest_pose_button").get_parameter_value().integer_value)
+        self.rest_pose_service = (
+            self.get_parameter("rest_pose_service").get_parameter_value().string_value)
         self.speed_axis = self.get_parameter("speed_axis").get_parameter_value().integer_value
         self.speed_axis_threshold = (
             self.get_parameter("speed_axis_threshold").get_parameter_value().double_value)
@@ -50,6 +57,8 @@ class Ds4BodyPoseMode(Node):
 
         self.mode_publisher = self.create_publisher(Bool, mode_topic, 10)
         self.cmd_publisher = self.create_publisher(TwistStamped, output_cmd_topic, 10)
+        self.rest_pose_client = self.create_client(Trigger, self.rest_pose_service)
+        self.rest_pose_future = None
         self.create_subscription(Joy, joy_topic, self.joy_callback, 10)
         self.create_subscription(Bool, mode_topic, self.mode_callback, 10)
         self.create_subscription(TwistStamped, input_cmd_topic, self.cmd_callback, 10)
@@ -57,6 +66,7 @@ class Ds4BodyPoseMode(Node):
     def joy_callback(self, msg: Joy):
         self.publish_on_press(msg, self.body_pose_button, True)
         self.publish_on_press(msg, self.walking_button, False)
+        self.call_rest_pose_on_press(msg, self.rest_pose_button)
         self.update_speed_scale(msg)
         self.previous_buttons = list(msg.buttons)
 
@@ -89,12 +99,49 @@ class Ds4BodyPoseMode(Node):
         if not is_pressed or was_pressed:
             return
 
+        self.publish_mode(enabled)
+        self.get_logger().info(
+            f"Published body_pose_mode={str(enabled).lower()} from DS4 button {button_index}.")
+
+    def call_rest_pose_on_press(self, msg: Joy, button_index: int):
+        if button_index < 0 or button_index >= len(msg.buttons):
+            return
+
+        was_pressed = (
+            button_index < len(self.previous_buttons) and
+            self.previous_buttons[button_index] == 1)
+        is_pressed = msg.buttons[button_index] == 1
+        if not is_pressed or was_pressed:
+            return
+
+        self.publish_mode(False)
+
+        if not self.rest_pose_client.wait_for_service(timeout_sec=0.0):
+            self.get_logger().warning(
+                f"Rest-pose service '{self.rest_pose_service}' is not available.")
+            return
+
+        self.rest_pose_future = self.rest_pose_client.call_async(Trigger.Request())
+        self.rest_pose_future.add_done_callback(self.on_rest_pose_response)
+        self.get_logger().info("Requested resting pose from DS4 triangle button.")
+
+    def publish_mode(self, enabled: bool):
         mode_msg = Bool()
         mode_msg.data = enabled
         self.mode_publisher.publish(mode_msg)
         self.body_pose_mode_enabled = enabled
-        self.get_logger().info(
-            f"Published body_pose_mode={str(enabled).lower()} from DS4 button {button_index}.")
+
+    def on_rest_pose_response(self, future):
+        try:
+            response = future.result()
+        except Exception as exc:  # noqa: BLE001
+            self.get_logger().warning(f"Rest-pose service call failed: {exc}")
+            return
+
+        if response.success:
+            self.get_logger().info(response.message)
+        else:
+            self.get_logger().warning(response.message)
 
     def update_speed_scale(self, msg: Joy):
         if self.body_pose_mode_enabled or self.speed_axis < 0 or self.speed_axis >= len(msg.axes):
