@@ -32,13 +32,13 @@ teleop_twist_joy_node:
       roll: 3   # Right thumbstick up/down
       pitch: 6  # D-pad left/right
     scale_angular:
-      yaw: 0.5
-      roll: 0.25
-      pitch: 0.25
+      yaw: 0.35
+      roll: 0.2
+      pitch: 0.2
     scale_angular_turbo:
-      yaw: 1.25
-      roll: 0.5
-      pitch: 0.5
+      yaw: 1.0
+      roll: 0.4
+      pitch: 0.4
 
     # Enable publishing TwistStamped messages
     publish_stamped_twist: true
