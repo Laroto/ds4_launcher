@@ -22,4 +22,6 @@ This package only contains the launch files with the custom parameter files.
 - Circle -> publish `body_pose_mode=true` once
 - Square -> publish `body_pose_mode=false` once
 - Triangle -> publish `body_pose_mode=false` once and call `go_to_rest_pose`
+- Cross first press -> publish zero `cmd_vel` and call `/motors/disable`
+- Cross second press -> publish zero `cmd_vel`, call `/control/reset`, and call `/motors/enable`
 - D-pad Up/Down in walking mode -> increase/decrease speed scale in 10% steps

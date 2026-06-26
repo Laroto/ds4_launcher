@@ -20,6 +20,10 @@ class Ds4BodyPoseMode(Node):
         self.declare_parameter("walking_button", 3)
         self.declare_parameter("rest_pose_button", 2)
         self.declare_parameter("rest_pose_service", "go_to_rest_pose")
+        self.declare_parameter("recovery_button", 0)
+        self.declare_parameter("motor_disable_service", "/motors/disable")
+        self.declare_parameter("motor_enable_service", "/motors/enable")
+        self.declare_parameter("control_reset_service", "/control/reset")
         self.declare_parameter("speed_axis", 7)
         self.declare_parameter("speed_axis_threshold", 0.5)
         self.declare_parameter("speed_step_ratio", 0.1)
@@ -40,6 +44,14 @@ class Ds4BodyPoseMode(Node):
             self.get_parameter("rest_pose_button").get_parameter_value().integer_value)
         self.rest_pose_service = (
             self.get_parameter("rest_pose_service").get_parameter_value().string_value)
+        self.recovery_button = (
+            self.get_parameter("recovery_button").get_parameter_value().integer_value)
+        self.motor_disable_service = (
+            self.get_parameter("motor_disable_service").get_parameter_value().string_value)
+        self.motor_enable_service = (
+            self.get_parameter("motor_enable_service").get_parameter_value().string_value)
+        self.control_reset_service = (
+            self.get_parameter("control_reset_service").get_parameter_value().string_value)
         self.speed_axis = self.get_parameter("speed_axis").get_parameter_value().integer_value
         self.speed_axis_threshold = (
             self.get_parameter("speed_axis_threshold").get_parameter_value().double_value)
@@ -54,11 +66,16 @@ class Ds4BodyPoseMode(Node):
         self.previous_speed_axis_state = 0
         self.body_pose_mode_enabled = False
         self.speed_scale = 1.0
+        self.recovery_armed = False
 
         self.mode_publisher = self.create_publisher(Bool, mode_topic, 10)
         self.cmd_publisher = self.create_publisher(TwistStamped, output_cmd_topic, 10)
         self.rest_pose_client = self.create_client(Trigger, self.rest_pose_service)
+        self.motor_disable_client = self.create_client(Trigger, self.motor_disable_service)
+        self.motor_enable_client = self.create_client(Trigger, self.motor_enable_service)
+        self.control_reset_client = self.create_client(Trigger, self.control_reset_service)
         self.rest_pose_future = None
+        self.pending_trigger_futures = []
         self.create_subscription(Joy, joy_topic, self.joy_callback, 10)
         self.create_subscription(Bool, mode_topic, self.mode_callback, 10)
         self.create_subscription(TwistStamped, input_cmd_topic, self.cmd_callback, 10)
@@ -67,6 +84,7 @@ class Ds4BodyPoseMode(Node):
         self.publish_on_press(msg, self.body_pose_button, True)
         self.publish_on_press(msg, self.walking_button, False)
         self.call_rest_pose_on_press(msg, self.rest_pose_button)
+        self.recover_control_on_press(msg, self.recovery_button)
         self.update_speed_scale(msg)
         self.previous_buttons = list(msg.buttons)
 
@@ -125,11 +143,55 @@ class Ds4BodyPoseMode(Node):
         self.rest_pose_future.add_done_callback(self.on_rest_pose_response)
         self.get_logger().info("Requested resting pose from DS4 triangle button.")
 
+    def recover_control_on_press(self, msg: Joy, button_index: int):
+        if button_index < 0 or button_index >= len(msg.buttons):
+            return
+
+        was_pressed = (
+            button_index < len(self.previous_buttons) and
+            self.previous_buttons[button_index] == 1)
+        is_pressed = msg.buttons[button_index] == 1
+        if not is_pressed or was_pressed:
+            return
+
+        self.publish_mode(False)
+        self.publish_zero_command()
+        if not self.recovery_armed:
+            self.call_trigger_service(
+                self.motor_disable_client, self.motor_disable_service, "motor disable")
+            self.recovery_armed = True
+            self.get_logger().warning(
+                "Requested motor disable from DS4 cross button. Press cross again to reset control and enable motors.")
+            return
+
+        self.call_trigger_service(
+            self.control_reset_client, self.control_reset_service, "control reset")
+        self.call_trigger_service(
+            self.motor_enable_client, self.motor_enable_service, "motor enable")
+        self.recovery_armed = False
+        self.get_logger().warning("Requested control reset and motor enable from DS4 cross button.")
+
     def publish_mode(self, enabled: bool):
         mode_msg = Bool()
         mode_msg.data = enabled
         self.mode_publisher.publish(mode_msg)
         self.body_pose_mode_enabled = enabled
+
+    def publish_zero_command(self):
+        msg = TwistStamped()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "base_link"
+        self.cmd_publisher.publish(msg)
+
+    def call_trigger_service(self, client, service_name: str, description: str):
+        if not client.wait_for_service(timeout_sec=0.0):
+            self.get_logger().warning(f"{description} service '{service_name}' is not available.")
+            return
+
+        future = client.call_async(Trigger.Request())
+        self.pending_trigger_futures.append(future)
+        future.add_done_callback(
+            lambda completed_future: self.on_trigger_response(completed_future, description))
 
     def on_rest_pose_response(self, future):
         try:
@@ -142,6 +204,21 @@ class Ds4BodyPoseMode(Node):
             self.get_logger().info(response.message)
         else:
             self.get_logger().warning(response.message)
+
+    def on_trigger_response(self, future, description: str):
+        try:
+            response = future.result()
+        except Exception as exc:  # noqa: BLE001
+            self.get_logger().warning(f"{description} service call failed: {exc}")
+            return
+        finally:
+            if future in self.pending_trigger_futures:
+                self.pending_trigger_futures.remove(future)
+
+        if response.success:
+            self.get_logger().info(f"{description}: {response.message}")
+        else:
+            self.get_logger().warning(f"{description}: {response.message}")
 
     def update_speed_scale(self, msg: Joy):
         if self.body_pose_mode_enabled or self.speed_axis < 0 or self.speed_axis >= len(msg.axes):

@@ -12,6 +12,11 @@ ds4_body_pose_mode:
     # Triangle
     rest_pose_button: 2
     rest_pose_service: go_to_rest_pose
+    # Cross
+    recovery_button: 0
+    motor_disable_service: /motors/disable
+    motor_enable_service: /motors/enable
+    control_reset_service: /control/reset
     # D-pad up/down. Used for walking-speed steps only while body-pose mode is off.
     speed_axis: 7
     speed_axis_threshold: 0.5
